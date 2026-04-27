@@ -1,0 +1,34 @@
+name: UiPath Pack
+description: 'Packs UiPath project within a repository into .nupkg package for deployment by other actions.'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET 6.0 (x64)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+        architecture: 'x64'
+
+    - name: setup UiPath CLI
+      shell: pwsh
+      run: |
+        $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+        New-Item -Path "$scriptPath" -ItemType "directory" -Name "uipathcli";
+        Invoke-WebRequest "https://uipath.pkgs.visualstudio.com/Public.Feeds/_apis/packaging/feeds/1c781268-d43d-45ab-9dfc-0151a1c740b7/nuget/packages/UiPath.CLI.Windows/versions/23.4.8951.9936/content" -OutFile "$scriptPath\\uipathcli\\cli.zip";
+        Expand-Archive -LiteralPath "$scriptPath\\uipathcli\\cli.zip" -DestinationPath "$scriptPath\\uipathcli";
+
+        $now = Get-Date -Format "G"
+        Write-Host "$now  UiPath CLI is downloaded and extracted in folder $scriptPath\\uipathcli"
+
+    - name: pack
+      id: pack
+      shell: pwsh
+      run: |
+        $scriptPath = Split-Path -Parent $MyInvocation.MyCommand.Path
+        $uipathCLI = "$scriptPath\uipathcli\tools\uipcli.exe"
+        
+        $now = Get-Date -Format "G"
+        Write-Host "$now  uipcli location : $uipathCLI"
+        Write-Host "$now  Executing $uipathCLI package pack ${{ github.workspace }}\project.json -o ${{ github.workspace }}\package"
+        & "$uipathCLI" package pack ${{ github.workspace }}\project.json -o ${{ github.workspace }}\package
