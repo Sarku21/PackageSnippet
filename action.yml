@@ -1,5 +1,5 @@
 name: UiPath Pack
-description: 'Packs UiPath project within a repository into .nupkg package for deployment by other actions.'
+description: 'Packs UiPath project within a repository into .nupkg package for deployment by other actions'
 
 runs:
   using: "composite"
